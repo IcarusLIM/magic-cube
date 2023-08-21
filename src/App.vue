@@ -1,23 +1,22 @@
 <template>
   <header>
     <div class="clip-font">
-      <span class="">For</span>
-      <span class="font-youyuan">测试</span>
+      <span class="font-en">For </span>
+      <span class="font-cn"> 可乐盖儿</span>
     </div>
   </header>
 
   <main>
     <Cube />
     <!-- <Test /> -->
-
-    <!-- Navie UI Dialog -->
-    <n-dialog-provider>
-      <content />
-    </n-dialog-provider>
   </main>
 
   <footer>
-    <div class="clip-font">测试测试～</div>
+    <div style="width: 100%;display: flex;">
+      <div class="clip-font" style="margin-left: auto;">
+        <span class="font-cn">七夕快乐呀～</span>
+      </div>
+    </div>
   </footer>
 </template>
 
@@ -32,14 +31,19 @@ header {
 }
 
 .clip-font {
-  font-family: 'cera-round-pro-bold';
   background-clip: text;
   -webkit-background-clip: text;
-  /* color: transparent; */
-  background-image: url("./assets/fontbg.png");
+  color: transparent;
+  background-image: url("./assets/bg.png");
 }
 
-.font-youyuan {
+.font-en {
+  font-family: 'cera-round-pro-bold';
+  font-size: 50px;
+}
+
+.font-cn {
   font-family: 'Hannotate SC', 'Yuanti SC';
+  font-size: 30px;
 }
 </style>

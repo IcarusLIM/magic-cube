@@ -1,35 +1,44 @@
 <template>
     <div class="container">
         <canvas id="cube-canvas"></canvas>
-        <!-- <div class="control-panel">
+        <div class="control-panel">
             <div>
-                <button mat-mini-fab (click)="start()" color="primary" :disabled="isFreeze">
-                    <mat-icon aria-label="Play">play_arrow</mat-icon>
-                </button>
-                <n-button *ngIf="cube != null" mat-icon-button (click)="autoSolve()" color="accent"
-                    :disabled="isFreeze || cube.isSolved()">
-                    <mat-icon aria-label="Auto Solve">vpn_key</mat-icon>
+                <n-button tertiary @click="start" :disabled="isFreeze" circle>
+                    <n-icon>
+                        <Play />
+                    </n-icon>
+                </n-button>
+                <n-button @click="autoSolve" :disabled="isFreeze" text>
+                    <n-icon>
+                        <KeyOutline />
+                    </n-icon>
                 </n-button>
             </div>
             <div>
-                <button mat-icon-button @click="resetCamera()">
-                    <mat-icon aria-label="Reset">refresh</mat-icon>
-                </button>
-                <button mat-icon-button (click)="rotateCamera(-1)">
-                    <mat-icon aria-label="Rotate left">keyboard_arrow_left</mat-icon>
-                </button>
-                <button mat-icon-button (click)="rotateCamera(1)">
-                    <mat-icon aria-label="Rotate right">keyboard_arrow_right</mat-icon>
-                </button>
-                <button mat-icon-button (click)="switchCamera()">
-                    <n-icon size="40" color="#0e7a0d">
-                        <game-controller />
+                <n-button @click="resetCamera()" text>
+                    <template #icon>
+                        <n-icon>
+                            <Refresh />
+                        </n-icon>
+                    </template>
+                </n-button>
+                <n-button @click="rotateCamera(-1)" text>
+                    <n-icon>
+                        <ChevronBack />
                     </n-icon>
-                    <mat-icon *ngIf="cameraPosition[1] === 1" aria-label="Top look">keyboard_arrow_up</mat-icon>
-                    <mat-icon *ngIf="cameraPosition[1] === 0" aria-label="Bottom look">keyboard_arrow_down</mat-icon>
-                </button>
+                </n-button>
+                <n-button @click="rotateCamera(1)" text>
+                    <n-icon>
+                        <ChevronForward />
+                    </n-icon>
+                </n-button>
+                <n-button @click="switchCamera()" text>
+                    <n-icon>
+                        <ChevronUp />
+                    </n-icon>
+                </n-button>
             </div>
-        </div> -->
+        </div>
     </div>
 </template>
 
@@ -51,7 +60,7 @@ import {
     ActionManager,
     Light
 } from "babylonjs";
-import { GameControllerOutline, GameController } from '@vicons/ionicons5'
+import { Play, KeyOutline, Refresh, ChevronUp, ChevronBack, ChevronForward } from '@vicons/ionicons5'
 import Cube from "../lib/Cube";
 import { easingFunction } from "../lib/helpers";
 import { AxisEnum } from "../lib/enums";
@@ -62,6 +71,7 @@ import {
     directionToRotatePieces
 } from "../lib/helpers";
 import { onMounted, onUnmounted, ref } from "vue";
+import { NButton, NDialog, NIcon, NSpace } from 'naive-ui';
 
 const ORDER_NUMBER = 3;
 const DIRECTION_PLANE_WIDTH = 5;
@@ -256,14 +266,15 @@ function debounce(func: any, time: number | null) {
 }
 
 function onResize(event?: Event) {
-    // console.log(window.innerHeight, window.innerWidth)
+    console.log("resize", window.innerHeight, window.innerWidth)
     const size = Math.min(window.innerHeight, window.innerWidth)
-    canvasElem.style.width = size + "px"
-    canvasElem.style.height = size + "px"
+    canvasElem.style.width = size * 0.8 + "px"
+    canvasElem.style.height = size * 0.8 + "px"
     engine.resize();
 }
 
 function pickStartCB(event: MouseEvent) {
+    const canvasRect = canvasElem.getBoundingClientRect()
     if (isFreeze.value) return;
     pickInfo = {
         pickStartTime: new Date().getTime()
@@ -272,7 +283,7 @@ function pickStartCB(event: MouseEvent) {
         directionPlane.dispose();
         directionPlane = null;
     }
-    let pickResult = scene.pick(event.clientX, event.clientY);
+    let pickResult = scene.pick(event.clientX - canvasRect.left, event.clientY - canvasRect.top);
     if (!pickResult.hit) return;
     // console.log("pickStart", pickResult.pickedMesh, pickResult.pickedMesh!.getIndices())
     let indices = pickResult.pickedMesh!.getIndices();
@@ -300,7 +311,7 @@ function pickStartCB(event: MouseEvent) {
         scene
     );
     plane.isPickable = false;
-    plane.isVisible = true;
+    plane.isVisible = false;
     let mat = new StandardMaterial("mat", scene);
     mat.emissiveColor = Color3.White();
     mat.wireframe = true;
@@ -314,8 +325,9 @@ function pickStartCB(event: MouseEvent) {
 };
 
 function pickingCB(event: MouseEvent) {
+    const canvasRect = canvasElem.getBoundingClientRect()
     if (isFreeze.value) return;
-    let pickResult = scene.pick(event.clientX, event.clientY, mesh => {
+    let pickResult = scene.pick(event.clientX - canvasRect.left, event.clientY - canvasRect.top, mesh => {
         if (mesh == directionPlane && mesh.isPickable === true) {
             return true;
         }
@@ -364,9 +376,10 @@ function pickStopCB(event: MouseEvent) {
                 preRotateParams[2] >= 0
             );
         }
+    } else {
+        cube.clearPreRotate()
     }
     preRotateParams = null;
-    cube.clearPreRotate();
 };
 
 function initController() {
@@ -375,72 +388,37 @@ function initController() {
     canvasElem.addEventListener("pointermove", pickingCB);
 }
 
-// start() {
-//     if (!this.cube.isSolved()) {
-//         let dialogRef = this.dialog.open(CubeInfoDialog, {
-//             width: "350px",
-//             data: {
-//                 title: "CUBE_INF_DLG.RESTART",
-//                 content: "CUBE_INF_DLG.RESTART_CAUTION",
-//                 no: "CUBE_INF_DLG.CONTINUE",
-//                 yes: "CUBE_INF_DLG.RESTART"
-//             }
-//         });
-//         dialogRef.afterClosed().subscribe((isRestart: boolean) => {
-//             if (isRestart) {
-//                 this.restart();
-//             }
-//         });
-//     } else {
-//         this.restart();
-//     }
-// }
+function start() {
+    if (!cube.isSolved()) {
+        restart()
+    }
+}
 
-// restart() {
-//     if (!this.cube.isSolved()) {
-//         this.cube.reset();
-//     }
-//     this.cube.scramble();
-// }
+function restart() {
+    if (!cube.isSolved()) {
+        cube.reset();
+    }
+    cube.scramble();
+}
 
-// autoSolve() {
-//     let dialogRef = this.dialog.open(CubeInfoDialog, {
-//         width: "350px",
-//         data: {
-//             title: "CUBE_INF_DLG.ANSWER",
-//             content: this.cube.getAnswer(),
-//             no: "CUBE_INF_DLG.CLOSE",
-//             yes: "CUBE_INF_DLG.AUTO_RESTORE"
-//         }
-//     });
-//     dialogRef.afterClosed().subscribe((isRestart: boolean) => {
-//         if (isRestart) {
-//             this.cube.rotateByLetters(this.cube.getAnswer());
-//         }
-//     });
-// }
+function autoSolve() {
+    cube.rotateByLetters(cube.getAnswer())
+    // dialog.info({
+    //     title: '提示',
+    //     content: cube.getAnswer(),
+    //     positiveText: "自动还原",
+    //     negativeText: "关闭",
+    //     onPositiveClick: () => {
+    //         cube.rotateByLetters(cube.getAnswer())
+    //     }
+    // })
+}
 
 
 function createCube(orderNum: number) {
     return new Cube(scene, orderNum, {
         rotatingStopCB: () => {
             isFreeze.value = false;
-            // if (cube.isSolved()) {
-            //     let dialogRef = this.dialog.open(CubeInfoDialog, {
-            //         width: "350px",
-            //         data: {
-            //             title: "CUBE_INF_DLG.CHEER_UNLOCK",
-            //             content: "CUBE_INF_DLG.NEW_START",
-            //             no: "CUBE_INF_DLG.CLOSE",
-            //             yes: "CUBE_INF_DLG.RESTART"
-            //         }
-            //     });
-            //     dialogRef.afterClosed().subscribe((isRestart: boolean) => {
-            //         if (isRestart) {
-            //             this.restart();
-            //         }
-            //     });
-            // }
         },
         rotatingStartCB: () => {
             isFreeze.value = true;
@@ -470,5 +448,15 @@ onUnmounted(() => {
 .container {
     width: 100%;
     height: 80%;
+}
+
+.control-panel {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.control-panel button {
+    margin: 5px;
 }
 </style>
