@@ -167,7 +167,7 @@ function calcFaceUV(x: number, y: number, z: number, orderNum: number) {
 function createMats(scene: Scene) {
     let material = new StandardMaterial("cubeSprite", scene);
     material.diffuseTexture = new Texture(
-        `./src/assets/cubeSprite.png`,
+        `/cubeSprite.png`,
         scene
     );
     return material;
