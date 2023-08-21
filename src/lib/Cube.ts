@@ -214,7 +214,7 @@ export default class Cube {
         pieces: Mesh[];
         rotateParams: [AxisEnum, number];
     } | null;
-    private cubejs: any = new Cubejs();
+    private cubejs: any = new Cubejs.default();
 
     constructor(
         scene: Scene,
@@ -447,7 +447,7 @@ export default class Cube {
     public reset() {
         this.destroyPieces();
         this.pieces = this.createPieces();
-        this.cubejs = new Cubejs();
+        this.cubejs = new Cubejs.default();
     }
 
     public scramble() {

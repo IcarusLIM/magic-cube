@@ -8,6 +8,9 @@ export default defineConfig({
   plugins: [
     vue(),
   ],
+  optimizeDeps: {
+    include: ['cubejs']
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
@@ -17,5 +20,6 @@ export default defineConfig({
     commonjsOptions: {
       transformMixedEsModules: true
     }
-  }
+  },
+  base: "/magic-cube"
 })
